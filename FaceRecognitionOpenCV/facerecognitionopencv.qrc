@@ -1,0 +1,4 @@
+<RCC>
+    <qresource prefix="FaceRecognitionOpenCV">
+    </qresource>
+</RCC>
