@@ -34,9 +34,15 @@
     <ClCompile Include="facerecognitionopencv.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="opencv_tools.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="facerecognitionopencv.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="opencv_tools.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
