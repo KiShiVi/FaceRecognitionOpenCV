@@ -7,6 +7,7 @@
 #include <QtCore/qobject.h>
 #include <QtGui/qpixmap.h>
 #include <atomic>
+#include <string>
 
 enum ErrorID
 {
@@ -19,21 +20,21 @@ class OpenCVTools : public QObject
 {
 	Q_OBJECT
 public:
-	OpenCVTools(std::atomic<bool>* in_cameraIsWorking, std::atomic<int>* in_numberOfFace);
+	OpenCVTools(std::atomic<bool>* in_cameraIsWorking);
 
 public slots:
-	void cameraRun();
+	void cameraRun(bool findEyes);
+	void detectAndDisplayOneShot(std::string imagePath, bool eyesDetecting);
 
 signals:
 	void errorSignal(int error);
-	void updatePixmaps(QPixmap mainPixmap, QPixmap zoomPixmap, int amountOfFoundFaces);
+	void updatePixmaps(QPixmap mainPixmap, QList<QPixmap> zoomPixmap, int amountOfFoundFaces);
 
 private:
 	void detectAndDisplay(cv::Mat frame, bool eyesDetecting);
 	QPixmap cvMatToQPixmap(const cv::Mat & inMat);
 
 	std::atomic<bool>*		cameraIsWorking;
-	std::atomic<int>*		numberOfFace;
 
 	cv::CascadeClassifier	face_cascade;
 	cv::CascadeClassifier	eyes_cascade;

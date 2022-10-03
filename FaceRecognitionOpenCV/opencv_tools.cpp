@@ -1,14 +1,14 @@
 #include "opencv_tools.h"
 #include <QtGui/qimage.h>
 
-OpenCVTools::OpenCVTools(std::atomic<bool>* in_cameraIsWorkingm, std::atomic<int>* in_numberOfFace):
-    cameraIsWorking(in_cameraIsWorkingm), numberOfFace(in_numberOfFace)
+OpenCVTools::OpenCVTools(std::atomic<bool>* in_cameraIsWorkingm) :
+    cameraIsWorking(in_cameraIsWorkingm)
 {
     face_cascade = cv::CascadeClassifier();
     eyes_cascade = cv::CascadeClassifier();
 
-    cv::String face_cascade_name = cv::samples::findFile(cv::String("data/haarcascades/haarcascade_frontalface_alt.xml"));
-    cv::String eyes_cascade_name = cv::samples::findFile(cv::String("data/haarcascades/haarcascade_eye_tree_eyeglasses.xml"));
+    cv::String face_cascade_name = cv::samples::findFile(cv::String("haarcascades/haarcascade_frontalface_alt.xml"));
+    cv::String eyes_cascade_name = cv::samples::findFile(cv::String("haarcascades/haarcascade_eye_tree_eyeglasses.xml"));
 
     if(!face_cascade.load(face_cascade_name))
         exit(1);
@@ -16,7 +16,13 @@ OpenCVTools::OpenCVTools(std::atomic<bool>* in_cameraIsWorkingm, std::atomic<int
         exit(1);
 }
 
-void OpenCVTools::cameraRun()
+void OpenCVTools::detectAndDisplayOneShot(std::string imagePath, bool eyesDetecting)
+{
+    cv::Mat frame = cv::imread(imagePath);
+    detectAndDisplay(frame, eyesDetecting);
+}
+
+void OpenCVTools::cameraRun(bool findEyes)
 {
     cameraIsWorking->store(true);
     cv::VideoCapture capture;
@@ -36,13 +42,14 @@ void OpenCVTools::cameraRun()
             return;
         }
 
-        detectAndDisplay(frame, false);
+        detectAndDisplay(frame, findEyes);
     }
 
 }
 
 void OpenCVTools::detectAndDisplay(cv::Mat frame, bool eyesDetecting)
 {
+    cv::Mat initFrame = frame.clone();
     QList<QPixmap> zoomImages;
     QPixmap mainImage = cvMatToQPixmap(frame);
     cv::Mat frame_gray;
@@ -55,7 +62,7 @@ void OpenCVTools::detectAndDisplay(cv::Mat frame, bool eyesDetecting)
     for (size_t i = 0; i < faces.size(); i++)
     {
         cv::Point center(faces[i].x + faces[i].width / 2, faces[i].y + faces[i].height / 2);
-        rectangle(frame, faces[i], cv::Scalar(255, 0, 255), 8);
+        rectangle(frame, faces[i], cv::Scalar(255, 0, 255), 16);
         //ellipse(frame, center, Size(faces[i].width / 2, faces[i].height / 2), 0, 0, 360, Scalar(255, 0, 255), 4);
         cv::Mat faceROI = frame_gray(faces[i]);
 
@@ -68,25 +75,25 @@ void OpenCVTools::detectAndDisplay(cv::Mat frame, bool eyesDetecting)
             {
                 cv::Point eye_center(faces[i].x + eyes[j].x + eyes[j].width / 2, faces[i].y + eyes[j].y + eyes[j].height / 2);
                 int radius = cvRound((eyes[j].width + eyes[j].height) * 0.25);
-                circle(frame, eye_center, radius, cv::Scalar(255, 0, 0), 4);
+                circle(frame, eye_center, radius, cv::Scalar(255, 0, 0), 8);
             }
         }
     }
     ////-- Show what you got
     for (int i = 0; i < faces.size(); ++i)
     {
-        cv::Mat ROI(frame, cv::Rect(faces[i].x, faces[i].y, faces[i].width, faces[i].height));
+        cv::Mat ROI(initFrame, cv::Rect(faces[i].x, faces[i].y, faces[i].width, faces[i].height));
         zoomImages.append(cvMatToQPixmap(ROI));
     }
-    QPixmap zoomImage;
-    if (faces.size() > 0 && *numberOfFace < faces.size())
-        zoomImage = zoomImages[*numberOfFace];
-    else
-        zoomImage = QPixmap();
+    //QPixmap zoomImage;
+    //if (faces.size() > 0 && *numberOfFace < faces.size())
+    //    zoomImage = zoomImages[*numberOfFace];
+    //else
+    //    zoomImage = QPixmap();
 
     mainImage = cvMatToQPixmap(frame);
 
-    emit updatePixmaps(mainImage, zoomImage, faces.size());
+    emit updatePixmaps(mainImage, zoomImages, faces.size());
 }
 
 QPixmap OpenCVTools::cvMatToQPixmap(const cv::Mat& inMat)

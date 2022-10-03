@@ -10,6 +10,7 @@ class QPushButton;
 class OpenCVTools;
 class QPixmap;
 class QSlider;
+class QCheckBox;
 
 class FaceRecognitionOpenCV : public QWidget
 {
@@ -20,29 +21,34 @@ public:
     ~FaceRecognitionOpenCV();
 
 public slots:
-    void updateImages(QPixmap mainPixmap, QPixmap zoomPixmap, int amountOfFoundFaces);
+    void updateImagesContainers(QPixmap mainPixmap, QList<QPixmap> zoomPixmap, int amountOfFoundFaces);
 
 private:
     void initGui();
     void connects();
+    void updateImages();
 
 private slots:
     void onStopCameraClicked();
     void onStartCameraClicked();
+    void viaRunCamera();
     void onSliderValueChanged();
+    void onCurrentIndexChanged();
+    void onLoadButtonClicked();
 
 private:
     QThread*                thread;
     QSlider*                p_zoomImageChoise;
-    //QPixmap*                mainImage;
-    //QList<QPixmap>*         zoomImages;
+    QPixmap                 mainImage;
+    QList<QPixmap>          zoomImages;
     std::atomic<bool>       m_cameraIsWorking;
-    std::atomic<int>       m_numberOfFace;
+    int                     m_numberOfFace;
     OpenCVTools*            p_openCvTools;
     QPushButton*            p_cameraStart;
     QPushButton*            p_cameraStop;
+    QPushButton*            p_loadImage;
     QComboBox*              p_typeOfInputImage;
     QLabel*                 p_inputImage;
     QLabel*                 p_foundFace;
-
+    QCheckBox*              p_findEyes;
 };
