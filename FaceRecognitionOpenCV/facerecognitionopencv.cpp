@@ -10,10 +10,12 @@
 #include <QtCore/qthread.h>
 #include <QtWidgets/qfiledialog.h>
 #include <QtWidgets/qcheckbox.h>
+#include <QtWidgets/qmessagebox.h>
 
 FaceRecognitionOpenCV::FaceRecognitionOpenCV(QWidget *parent)
     : QWidget(parent)
 {
+    p_msgBox = new QMessageBox();
     initGui();
     //mainImage = new QPixmap();
     //zoomImages = new QList<QPixmap>();
@@ -33,7 +35,8 @@ FaceRecognitionOpenCV::FaceRecognitionOpenCV(QWidget *parent)
 }
 
 FaceRecognitionOpenCV::~FaceRecognitionOpenCV()
-{}
+{
+}
 
 
 
@@ -58,6 +61,7 @@ void FaceRecognitionOpenCV::connects()
     connect(p_cameraStart, SIGNAL(clicked()), this, SLOT(onStartCameraClicked()));
     connect(p_cameraStop, SIGNAL(clicked()), this, SLOT(onStopCameraClicked()));
     connect(p_openCvTools, SIGNAL(updatePixmaps(QPixmap, QList<QPixmap>, int)), this, SLOT(updateImagesContainers(QPixmap, QList<QPixmap>, int)));
+    connect(p_openCvTools, SIGNAL(errorSignal(int)), this, SLOT(onErrorSignal(int)));
     connect(p_zoomImageChoise, SIGNAL(valueChanged(int)), this, SLOT(onSliderValueChanged()));
     connect(p_typeOfInputImage, SIGNAL(currentIndexChanged(int)), this, SLOT(onCurrentIndexChanged()));
     connect(p_loadImage, SIGNAL(clicked()), this, SLOT(onLoadButtonClicked()));
@@ -103,6 +107,36 @@ void FaceRecognitionOpenCV::onLoadButtonClicked()
 
     if (filepath != "")
         p_openCvTools->detectAndDisplayOneShot(filepath.toStdString(), p_findEyes->isChecked());
+}
+
+void FaceRecognitionOpenCV::onErrorSignal(int errorID)
+{
+    p_msgBox->setWindowTitle("Error");
+    switch (errorID)
+    {
+    case DEFAULT_ERROR:
+        p_msgBox->setText("Unknown Error!");
+        break;
+    case CAMERA_OPEN_ERROR:
+        p_msgBox->setText("Camera open error!");
+        p_cameraStart->setEnabled(true);
+        p_cameraStop->setEnabled(true);
+        p_loadImage->setEnabled(false);
+        m_cameraIsWorking.store(false);
+        p_findEyes->setEnabled(true);
+        p_typeOfInputImage->setEnabled(true);
+        break;
+    case CAMERA_CAPTURED_ERROR:
+        p_msgBox->setText("Camera captured error");
+        p_cameraStart->setEnabled(true);
+        p_cameraStop->setEnabled(true);
+        p_loadImage->setEnabled(false);
+        m_cameraIsWorking.store(false);
+        p_findEyes->setEnabled(true);
+        p_typeOfInputImage->setEnabled(true);
+        break;
+    }
+    p_msgBox->show();
 }
 
 

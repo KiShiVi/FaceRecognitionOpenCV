@@ -11,6 +11,7 @@ class OpenCVTools;
 class QPixmap;
 class QSlider;
 class QCheckBox;
+class QMessageBox;
 
 class FaceRecognitionOpenCV : public QWidget
 {
@@ -35,6 +36,7 @@ private slots:
     void onSliderValueChanged();
     void onCurrentIndexChanged();
     void onLoadButtonClicked();
+    void onErrorSignal(int);
 
 private:
     QThread*                thread;
@@ -51,4 +53,6 @@ private:
     QLabel*                 p_inputImage;
     QLabel*                 p_foundFace;
     QCheckBox*              p_findEyes;
+
+    QMessageBox*            p_msgBox;
 };

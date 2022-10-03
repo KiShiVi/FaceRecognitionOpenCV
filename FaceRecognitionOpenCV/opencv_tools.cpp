@@ -7,8 +7,8 @@ OpenCVTools::OpenCVTools(std::atomic<bool>* in_cameraIsWorkingm) :
     face_cascade = cv::CascadeClassifier();
     eyes_cascade = cv::CascadeClassifier();
 
-    cv::String face_cascade_name = cv::samples::findFile(cv::String("haarcascades/haarcascade_frontalface_alt.xml"));
-    cv::String eyes_cascade_name = cv::samples::findFile(cv::String("haarcascades/haarcascade_eye_tree_eyeglasses.xml"));
+    cv::String face_cascade_name = "../haarcascades/haarcascade_frontalface_alt.xml";
+    cv::String eyes_cascade_name = "../haarcascades/haarcascade_eye_tree_eyeglasses.xml";
 
     if(!face_cascade.load(face_cascade_name))
         exit(1);
