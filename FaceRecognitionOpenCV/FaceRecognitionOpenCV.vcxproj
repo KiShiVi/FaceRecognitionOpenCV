@@ -99,6 +99,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="barchart.cpp" />
     <ClCompile Include="opencv_tools.cpp" />
     <QtRcc Include="facerecognitionopencv.qrc" />
     <ClCompile Include="facerecognitionopencv.cpp" />
@@ -109,6 +110,9 @@
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="opencv_tools.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="barchart.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

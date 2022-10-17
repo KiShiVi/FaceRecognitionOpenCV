@@ -2,6 +2,9 @@
 
 #include <atomic>
 #include <QtWidgets/QWidget>
+#include <QGraphicsScene>
+
+#include "barchart.h"
 
 class QThread;
 class QComboBox;
@@ -36,9 +39,13 @@ private slots:
     void onSliderValueChanged();
     void onCurrentIndexChanged();
     void onLoadButtonClicked();
+    void onRunButtonClicked();
+    void onClearButtonClicked();
+    void onExitButtonClicked();
     void onErrorSignal(int);
 
 private:
+    QString                 filepath;
     QThread*                thread;
     QSlider*                p_zoomImageChoise;
     QPixmap                 mainImage;
@@ -49,10 +56,17 @@ private:
     QPushButton*            p_cameraStart;
     QPushButton*            p_cameraStop;
     QPushButton*            p_loadImage;
+    QPushButton*            p_runImage;
+    QPushButton*            p_clearImage;
+    QPushButton*            p_exit;
     QComboBox*              p_typeOfInputImage;
     QLabel*                 p_inputImage;
     QLabel*                 p_foundFace;
+    //BarChart*               p_workPlace1;
+    QLabel*               p_workPlace1;
+    QLabel*                 p_workPlace2;
     QCheckBox*              p_findEyes;
+    QCheckBox*              p_BW;
 
     QMessageBox*            p_msgBox;
 };

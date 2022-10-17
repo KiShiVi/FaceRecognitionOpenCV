@@ -11,6 +11,7 @@
 #include <QtWidgets/qfiledialog.h>
 #include <QtWidgets/qcheckbox.h>
 #include <QtWidgets/qmessagebox.h>
+#include <QPainter>
 
 FaceRecognitionOpenCV::FaceRecognitionOpenCV(QWidget *parent)
     : QWidget(parent)
@@ -28,8 +29,8 @@ FaceRecognitionOpenCV::FaceRecognitionOpenCV(QWidget *parent)
     onCurrentIndexChanged();
 
 
-    p_openCvTools->detectAndDisplayOneShot("..\\TestImages\\Lenna.png", 
-        false);
+    //p_openCvTools->detectAndDisplayOneShot("..\\TestImages\\Lenna.png", 
+    //    false);
 
     setWindowFlags(Qt::MSWindowsFixedSizeDialogHint | Qt::Window | Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint);
 }
@@ -65,6 +66,9 @@ void FaceRecognitionOpenCV::connects()
     connect(p_zoomImageChoise, SIGNAL(valueChanged(int)), this, SLOT(onSliderValueChanged()));
     connect(p_typeOfInputImage, SIGNAL(currentIndexChanged(int)), this, SLOT(onCurrentIndexChanged()));
     connect(p_loadImage, SIGNAL(clicked()), this, SLOT(onLoadButtonClicked()));
+    connect(p_runImage, SIGNAL(clicked()), this, SLOT(onRunButtonClicked()));
+    connect(p_clearImage, SIGNAL(clicked()), this, SLOT(onClearButtonClicked()));
+    connect(p_exit, SIGNAL(clicked()), this, SLOT(onExitButtonClicked()));
 }
 
 void FaceRecognitionOpenCV::updateImages()
@@ -92,21 +96,42 @@ void FaceRecognitionOpenCV::onCurrentIndexChanged()
         p_cameraStart   ->setEnabled(false);
         p_cameraStop    ->setEnabled(false);
         p_loadImage     ->setEnabled(true);
+        p_runImage      ->setEnabled(true);
+        p_clearImage    ->setEnabled(true);
         break;
     case 1:
         p_cameraStart   ->setEnabled(true);
         p_cameraStop    ->setEnabled(true);
         p_loadImage     ->setEnabled(false);
+        p_runImage      ->setEnabled(false);
+        p_clearImage    ->setEnabled(false);
         break;
     }
 }
 
 void FaceRecognitionOpenCV::onLoadButtonClicked()
 {
-    QString filepath = QFileDialog::getOpenFileName(this, "Open Image", "..\\TestImages", "Other Files (*);; PNG Files (*.png);;JPG Files (*.JPG);;");
+    filepath = QFileDialog::getOpenFileName(this, "Open Image", "..\\TestImages", "Other Files (*);; PNG Files (*.png);;JPG Files (*.JPG);;");
 
+    onRunButtonClicked();
+}
+
+void FaceRecognitionOpenCV::onRunButtonClicked()
+{
     if (filepath != "")
-        p_openCvTools->detectAndDisplayOneShot(filepath.toStdString(), p_findEyes->isChecked());
+        p_openCvTools->detectAndDisplayOneShot(filepath.toStdString(), p_findEyes->isChecked(), p_BW->isChecked());
+}
+
+void FaceRecognitionOpenCV::onClearButtonClicked()
+{
+    p_foundFace->clear();
+    p_workPlace1->clear();
+    p_workPlace2->clear();
+}
+
+void FaceRecognitionOpenCV::onExitButtonClicked()
+{
+    exit(0);
 }
 
 void FaceRecognitionOpenCV::onErrorSignal(int errorID)
@@ -124,6 +149,7 @@ void FaceRecognitionOpenCV::onErrorSignal(int errorID)
         p_loadImage->setEnabled(false);
         m_cameraIsWorking.store(false);
         p_findEyes->setEnabled(true);
+        p_BW->setEnabled(false);
         p_typeOfInputImage->setEnabled(true);
         break;
     case CAMERA_CAPTURED_ERROR:
@@ -133,6 +159,7 @@ void FaceRecognitionOpenCV::onErrorSignal(int errorID)
         p_loadImage->setEnabled(false);
         m_cameraIsWorking.store(false);
         p_findEyes->setEnabled(true);
+        p_BW->setEnabled(true);
         p_typeOfInputImage->setEnabled(true);
         break;
     }
@@ -143,6 +170,7 @@ void FaceRecognitionOpenCV::onErrorSignal(int errorID)
 
 void FaceRecognitionOpenCV::onStartCameraClicked()
 {
+    p_BW->setEnabled(false);
     p_findEyes->setEnabled(false);
     p_typeOfInputImage->setEnabled(false);
     if (m_cameraIsWorking)
@@ -155,12 +183,13 @@ void FaceRecognitionOpenCV::onStartCameraClicked()
 
 void FaceRecognitionOpenCV::viaRunCamera()
 {
-    p_openCvTools->cameraRun(p_findEyes->isChecked());
+    p_openCvTools->cameraRun(p_findEyes->isChecked(), p_BW->isChecked());
 }
 
 
 void FaceRecognitionOpenCV::onStopCameraClicked()
 {
+    p_BW->setEnabled(true);
     p_findEyes->setEnabled(true);
     p_typeOfInputImage->setEnabled(true);
     m_cameraIsWorking.store(false);
@@ -178,7 +207,7 @@ void FaceRecognitionOpenCV::initGui()
     typeOfInputImageLayout->addWidget(p_typeOfInputImage);
 
     p_inputImage = new QLabel();
-    p_inputImage->setMaximumSize(256, 256);
+    p_inputImage->setFixedSize(300, 300);
 
     QVBoxLayout* leftSideLayout = new QVBoxLayout();
     leftSideLayout->addLayout(typeOfInputImageLayout);
@@ -191,11 +220,19 @@ void FaceRecognitionOpenCV::initGui()
     cameraButtonsLayout->addWidget(p_cameraStop);
 
     leftSideLayout->addLayout(cameraButtonsLayout);
-    p_loadImage = new QPushButton("Load Image");
+    p_loadImage     = new QPushButton("Load Image");
+    p_runImage      = new QPushButton("Run");
+    p_clearImage    = new QPushButton("Clear");
+    p_exit          = new QPushButton("Exit");
     leftSideLayout->addWidget(p_loadImage);
+    leftSideLayout->addWidget(p_runImage);
+    leftSideLayout->addWidget(p_clearImage);
+    leftSideLayout->addWidget(p_exit);
 
-    p_findEyes = new QCheckBox("Find eyes");
+    p_findEyes  = new QCheckBox("Find eyes");
+    p_BW        = new QCheckBox("BW");
     leftSideLayout->addWidget(p_findEyes);
+    leftSideLayout->addWidget(p_BW);
 
     p_zoomImageChoise = new QSlider();
     p_zoomImageChoise->setOrientation(Qt::Horizontal);
@@ -207,17 +244,32 @@ void FaceRecognitionOpenCV::initGui()
 
     p_foundFace = new QLabel();
     //p_foundFace->setScaledContents(true);
-    p_foundFace->setMaximumSize(256, 256);
+    p_foundFace->setFixedSize(300, 300);
     //p_foundFace->setPixmap(defaultImage);
     QVBoxLayout* rightSideLayout = new QVBoxLayout();
     rightSideLayout->addWidget(p_zoomImageChoise);
     rightSideLayout->addWidget(p_foundFace);
     rightSideLayout->addStretch(0);
 
+    QVBoxLayout* secondRightSideLayout = new QVBoxLayout();
+    p_workPlace1 = new QLabel();
+    //p_workPlace1 = new BarChart();
+    p_workPlace1->setFixedSize(300, 300);
+    //p_workPlace1->DRAW(0, 0, 300, 300);
+    //p_workPlace1->DRAW(0, 300, 0, 250);
+
+    secondRightSideLayout->addWidget(p_workPlace1);
+
+    QVBoxLayout* thirdRightSideLayout = new QVBoxLayout();
+    p_workPlace2 = new QLabel();
+    p_workPlace2->setFixedSize(300, 300);
+    thirdRightSideLayout->addWidget(p_workPlace2);
 
     QHBoxLayout* mainLayout = new QHBoxLayout();
     mainLayout->addLayout(leftSideLayout);
     mainLayout->addLayout(rightSideLayout);
+    mainLayout->addLayout(secondRightSideLayout);
+    mainLayout->addLayout(thirdRightSideLayout);
 
     setLayout(mainLayout);
 }

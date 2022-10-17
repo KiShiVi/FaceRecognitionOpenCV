@@ -16,13 +16,13 @@ OpenCVTools::OpenCVTools(std::atomic<bool>* in_cameraIsWorkingm) :
         exit(1);
 }
 
-void OpenCVTools::detectAndDisplayOneShot(std::string imagePath, bool eyesDetecting)
+void OpenCVTools::detectAndDisplayOneShot(std::string imagePath, bool eyesDetecting, bool bw)
 {
     cv::Mat frame = cv::imread(imagePath);
-    detectAndDisplay(frame, eyesDetecting);
+    detectAndDisplay(frame, eyesDetecting, bw);
 }
 
-void OpenCVTools::cameraRun(bool findEyes)
+void OpenCVTools::cameraRun(bool findEyes, bool bw)
 {
     cameraIsWorking->store(true);
     cv::VideoCapture capture;
@@ -42,14 +42,15 @@ void OpenCVTools::cameraRun(bool findEyes)
             return;
         }
 
-        detectAndDisplay(frame, findEyes);
+        detectAndDisplay(frame, findEyes, bw);
     }
 
 }
 
-void OpenCVTools::detectAndDisplay(cv::Mat frame, bool eyesDetecting)
+void OpenCVTools::detectAndDisplay(cv::Mat frame, bool eyesDetecting, bool bw)
 {
     cv::Mat initFrame = frame.clone();
+    cv::Mat eyesOnlyFrame = frame.clone();
     QList<QPixmap> zoomImages;
     QPixmap mainImage = cvMatToQPixmap(frame);
     cv::Mat frame_gray;
@@ -59,10 +60,12 @@ void OpenCVTools::detectAndDisplay(cv::Mat frame, bool eyesDetecting)
 
     std::vector<cv::Rect> faces;
     face_cascade.detectMultiScale(frame_gray, faces);
+    cv::Point eye_center;
+    int radius;
     for (size_t i = 0; i < faces.size(); i++)
     {
         cv::Point center(faces[i].x + faces[i].width / 2, faces[i].y + faces[i].height / 2);
-        rectangle(frame, faces[i], cv::Scalar(255, 0, 255), 16);
+        //rectangle(frame, faces[i], cv::Scalar(255, 0, 255), 16);
         //ellipse(frame, center, Size(faces[i].width / 2, faces[i].height / 2), 0, 0, 360, Scalar(255, 0, 255), 4);
         cv::Mat faceROI = frame_gray(faces[i]);
 
@@ -73,16 +76,18 @@ void OpenCVTools::detectAndDisplay(cv::Mat frame, bool eyesDetecting)
             eyes_cascade.detectMultiScale(faceROI, eyes);
             for (size_t j = 0; j < eyes.size(); j++)
             {
-                cv::Point eye_center(faces[i].x + eyes[j].x + eyes[j].width / 2, faces[i].y + eyes[j].y + eyes[j].height / 2);
-                int radius = cvRound((eyes[j].width + eyes[j].height) * 0.25);
-                circle(frame, eye_center, radius, cv::Scalar(255, 0, 0), 8);
+                eye_center = cv::Point(faces[i].x + eyes[j].x + eyes[j].width / 2, faces[i].y + eyes[j].y + eyes[j].height / 2);
+                radius = cvRound((eyes[j].width + eyes[j].height) * 0.25);
+                circle(eyesOnlyFrame, eye_center, radius, cv::Scalar(255, 0, 0), 6);
             }
         }
     }
     ////-- Show what you got
     for (int i = 0; i < faces.size(); ++i)
     {
-        cv::Mat ROI(initFrame, cv::Rect(faces[i].x, faces[i].y, faces[i].width, faces[i].height));
+        cv::Mat ROI(eyesOnlyFrame, cv::Rect(faces[i].x, faces[i].y, faces[i].width, faces[i].height));
+        if (bw)
+            cvtColor(ROI, ROI, cv::COLOR_BGR2GRAY);
         zoomImages.append(cvMatToQPixmap(ROI));
     }
     //QPixmap zoomImage;
@@ -92,6 +97,8 @@ void OpenCVTools::detectAndDisplay(cv::Mat frame, bool eyesDetecting)
     //    zoomImage = QPixmap();
 
     mainImage = cvMatToQPixmap(frame);
+
+    //cv::calcHist()
 
     emit updatePixmaps(mainImage, zoomImages, faces.size());
 }

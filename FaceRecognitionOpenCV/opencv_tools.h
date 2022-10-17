@@ -23,15 +23,15 @@ public:
 	OpenCVTools(std::atomic<bool>* in_cameraIsWorking);
 
 public slots:
-	void cameraRun(bool findEyes);
-	void detectAndDisplayOneShot(std::string imagePath, bool eyesDetecting);
+	void cameraRun(bool findEyes, bool bw);
+	void detectAndDisplayOneShot(std::string imagePath, bool eyesDetecting, bool bw);
 
 signals:
 	void errorSignal(int error);
 	void updatePixmaps(QPixmap mainPixmap, QList<QPixmap> zoomPixmap, int amountOfFoundFaces);
 
 private:
-	void detectAndDisplay(cv::Mat frame, bool eyesDetecting);
+	void detectAndDisplay(cv::Mat frame, bool eyesDetecting, bool bw);
 	QPixmap cvMatToQPixmap(const cv::Mat & inMat);
 
 	std::atomic<bool>*		cameraIsWorking;
