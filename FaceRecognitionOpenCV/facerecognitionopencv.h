@@ -25,7 +25,7 @@ public:
     ~FaceRecognitionOpenCV();
 
 public slots:
-    void updateImagesContainers(QPixmap mainPixmap, QList<QPixmap> zoomPixmap, int amountOfFoundFaces);
+    void updateImagesContainers(QPixmap mainPixmap, QList<QPixmap> zoomPixmap, int amountOfFoundFaces, QList<QList<QList<QList<float>>>> barCharts);
 
 private:
     void initGui();
@@ -62,11 +62,12 @@ private:
     QComboBox*              p_typeOfInputImage;
     QLabel*                 p_inputImage;
     QLabel*                 p_foundFace;
-    //BarChart*               p_workPlace1;
-    QLabel*               p_workPlace1;
+    QLabel*                 p_workPlace1;
     QLabel*                 p_workPlace2;
     QCheckBox*              p_findEyes;
     QCheckBox*              p_BW;
 
+    BarChart*               p_barChart;
     QMessageBox*            p_msgBox;
+    QList<QList<QList<QList<float>>>> m_barCharts;
 };

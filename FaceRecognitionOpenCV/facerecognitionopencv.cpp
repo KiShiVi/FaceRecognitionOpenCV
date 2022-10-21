@@ -41,10 +41,11 @@ FaceRecognitionOpenCV::~FaceRecognitionOpenCV()
 
 
 
-void FaceRecognitionOpenCV::updateImagesContainers(QPixmap mainPixmap, QList<QPixmap> zoomPixmap, int amountOfFoundFaces)
+void FaceRecognitionOpenCV::updateImagesContainers(QPixmap mainPixmap, QList<QPixmap> zoomPixmap, int amountOfFoundFaces, QList<QList<QList<QList<float>>>> barCharts)
 {
     p_zoomImageChoise->setMaximum(amountOfFoundFaces > 0 ? amountOfFoundFaces - 1 : 0);
     m_numberOfFace = amountOfFoundFaces < m_numberOfFace ? 0 : m_numberOfFace;
+    m_barCharts = barCharts;
 
     mainImage = mainPixmap;
     zoomImages.clear();
@@ -61,7 +62,8 @@ void FaceRecognitionOpenCV::connects()
 {
     connect(p_cameraStart, SIGNAL(clicked()), this, SLOT(onStartCameraClicked()));
     connect(p_cameraStop, SIGNAL(clicked()), this, SLOT(onStopCameraClicked()));
-    connect(p_openCvTools, SIGNAL(updatePixmaps(QPixmap, QList<QPixmap>, int)), this, SLOT(updateImagesContainers(QPixmap, QList<QPixmap>, int)));
+    connect(p_openCvTools, SIGNAL(updatePixmaps(QPixmap, QList<QPixmap>, int, QList<QList<QList<QList<float>>>>)), 
+        this, SLOT(updateImagesContainers(QPixmap, QList<QPixmap>, int, QList<QList<QList<QList<float>>>>)));
     connect(p_openCvTools, SIGNAL(errorSignal(int)), this, SLOT(onErrorSignal(int)));
     connect(p_zoomImageChoise, SIGNAL(valueChanged(int)), this, SLOT(onSliderValueChanged()));
     connect(p_typeOfInputImage, SIGNAL(currentIndexChanged(int)), this, SLOT(onCurrentIndexChanged()));
@@ -73,6 +75,12 @@ void FaceRecognitionOpenCV::connects()
 
 void FaceRecognitionOpenCV::updateImages()
 {
+    if (!m_barCharts.isEmpty())
+    {
+        p_barChart->clear();
+        p_barChart->draw(m_barCharts[m_numberOfFace]);
+    }
+
     p_inputImage->setPixmap(mainImage.scaled(p_inputImage->width(), p_inputImage->height(), Qt::KeepAspectRatio));
     if (zoomImages.size() > 0)
         p_foundFace->setPixmap(zoomImages[m_numberOfFace].scaled(p_foundFace->width(), p_foundFace->height(), Qt::KeepAspectRatio));
@@ -124,6 +132,7 @@ void FaceRecognitionOpenCV::onRunButtonClicked()
 
 void FaceRecognitionOpenCV::onClearButtonClicked()
 {
+    p_barChart->draw(QList<QList<QList<float>>>());
     p_foundFace->clear();
     p_workPlace1->clear();
     p_workPlace2->clear();
@@ -246,9 +255,13 @@ void FaceRecognitionOpenCV::initGui()
     //p_foundFace->setScaledContents(true);
     p_foundFace->setFixedSize(300, 300);
     //p_foundFace->setPixmap(defaultImage);
+
+    p_barChart = new BarChart();
+    p_barChart->setFixedSize(300, 100);
     QVBoxLayout* rightSideLayout = new QVBoxLayout();
     rightSideLayout->addWidget(p_zoomImageChoise);
     rightSideLayout->addWidget(p_foundFace);
+    rightSideLayout->addWidget(p_barChart);
     rightSideLayout->addStretch(0);
 
     QVBoxLayout* secondRightSideLayout = new QVBoxLayout();

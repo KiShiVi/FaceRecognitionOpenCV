@@ -28,7 +28,7 @@ public slots:
 
 signals:
 	void errorSignal(int error);
-	void updatePixmaps(QPixmap mainPixmap, QList<QPixmap> zoomPixmap, int amountOfFoundFaces);
+	void updatePixmaps(QPixmap mainPixmap, QList<QPixmap> zoomPixmap, int amountOfFoundFaces, QList<QList<QList<QList<float>>>> chartBars);
 
 private:
 	void detectAndDisplay(cv::Mat frame, bool eyesDetecting, bool bw);
